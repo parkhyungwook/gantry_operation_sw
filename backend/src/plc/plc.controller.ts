@@ -11,11 +11,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
-import { PlcPollingService } from './plc-polling.service';
+import { PlcService } from './services/plc.service';
 import {
   RegisterDataPointDto,
   WriteNumbersDto,
   WriteStringDto,
+  WriteBoolDto,
   SetPollingIntervalDto,
   PlcDataResponseDto,
   PlcCacheResponseDto,
@@ -27,7 +28,7 @@ import {
 export class PlcController {
   private readonly logger = new Logger(PlcController.name);
 
-  constructor(private readonly pollingService: PlcPollingService) {}
+  constructor(private readonly plcService: PlcService) {}
 
   // ==================== Data Points ====================
   @Get('data-points')
@@ -38,7 +39,7 @@ export class PlcController {
   })
   @ApiResponse({ status: 200, description: '데이터 포인트 목록 반환 성공', type: [DataPointInfoDto] })
   async getRegisteredDataPoints(): Promise<DataPointInfoDto[]> {
-    return this.pollingService.getDataPoints();
+    return this.plcService.getDataPoints();
   }
 
   @Post('data-points')
@@ -54,20 +55,19 @@ export class PlcController {
       properties: {
         key: { type: 'string', example: 'custom_sensor' },
         description: { type: 'string', example: '사용자 정의 센서' },
-        device: { type: 'number', example: 168, description: 'Device code (D=168, R=175, etc.)' },
+        addressType: { type: 'string', example: 'D', description: 'Address type (D, R, M, X, Y)', pattern: '^[DRMXY]$', maxLength: 1 },
         address: { type: 'number', example: 2000 },
-        count: { type: 'number', example: 5 },
-        type: { type: 'string', enum: ['number', 'string'], example: 'number' },
-        encoding: { type: 'string', enum: ['ascii', 'utf16le'] },
-        maxChars: { type: 'number' },
+        length: { type: 'number', example: 5, description: 'For number type: word count, For string type: character count' },
+        bit: { type: 'number', example: 0, description: 'Bit position (0-15, required for bool type)', minimum: 0, maximum: 15 },
+        type: { type: 'string', enum: ['number', 'string', 'bool'], example: 'number' },
       },
-      required: ['key', 'description', 'device', 'address', 'count', 'type'],
+      required: ['key', 'description', 'addressType', 'address', 'length', 'type'],
     },
   })
   @ApiResponse({ status: 201, description: '데이터 포인트 등록 성공' })
   @ApiResponse({ status: 400, description: '잘못된 요청' })
   async registerDataPoint(@Body() dto: any): Promise<{ message: string; dataPoint: DataPointInfoDto }> {
-    const dataPoint = await this.pollingService.registerDataPoint(dto);
+    const dataPoint = await this.plcService.registerDataPoint(dto);
 
     return {
       message: `Data point ${dto.key} registered successfully`,
@@ -89,7 +89,7 @@ export class PlcController {
   })
   @ApiResponse({ status: 204, description: '데이터 포인트 삭제 성공' })
   async unregisterDataPoint(@Param('key') key: string): Promise<void> {
-    await this.pollingService.unregisterDataPoint(key);
+    await this.plcService.unregisterDataPoint(key);
   }
 
   // ==================== Polling ====================
@@ -98,10 +98,10 @@ export class PlcController {
   @ApiOperation({ summary: '폴링 상태 조회', description: '현재 폴링 상태와 등록된 데이터 포인트를 조회합니다.' })
   @ApiResponse({ status: 200, description: '상태 정보 반환 성공', type: PollingStatusDto })
   async getStatus(): Promise<PollingStatusDto> {
-    const dataPoints = await this.pollingService.getDataPoints();
+    const dataPoints = await this.plcService.getDataPoints();
     return {
-      isPolling: this.pollingService.isPolling(),
-      intervalMs: this.pollingService.getIntervalMs(),
+      isPolling: this.plcService.isPolling(),
+      intervalMs: this.plcService.getIntervalMs(),
       registeredDataPoints: dataPoints.map((dp) => dp.key),
     };
   }
@@ -112,7 +112,7 @@ export class PlcController {
   @ApiOperation({ summary: '폴링 시작', description: '등록된 데이터 포인트에 대한 주기적 폴링을 시작합니다.' })
   @ApiResponse({ status: 200, description: '폴링 시작 성공' })
   startPolling(): { message: string } {
-    this.pollingService.startPolling();
+    this.plcService.startPolling();
     return { message: 'Polling started' };
   }
 
@@ -122,7 +122,7 @@ export class PlcController {
   @ApiOperation({ summary: '폴링 중지', description: '실행 중인 폴링을 중지합니다.' })
   @ApiResponse({ status: 200, description: '폴링 중지 성공' })
   stopPolling(): { message: string } {
-    this.pollingService.stopPolling();
+    this.plcService.stopPolling();
     return { message: 'Polling stopped' };
   }
 
@@ -133,7 +133,7 @@ export class PlcController {
   @ApiBody({ type: SetPollingIntervalDto })
   @ApiResponse({ status: 200, description: '폴링 간격 설정 성공' })
   setPollingInterval(@Body() dto: SetPollingIntervalDto): { message: string } {
-    this.pollingService.setPollingInterval(dto.intervalMs);
+    this.plcService.setPollingInterval(dto.intervalMs);
     return { message: `Polling interval set to ${dto.intervalMs}ms` };
   }
 
@@ -152,7 +152,7 @@ export class PlcController {
   @ApiResponse({ status: 200, description: '데이터 읽기 성공', type: PlcDataResponseDto })
   @ApiResponse({ status: 404, description: '데이터를 찾을 수 없음' })
   async readData(@Param('key') key: string): Promise<PlcDataResponseDto> {
-    const item = await this.pollingService.getCacheItem(key);
+    const item = await this.plcService.getCacheItem(key);
     if (!item) {
       throw new BadRequestException(
         `Data for '${key}' not found in DB. Make sure polling is running and the data point is registered.`
@@ -202,6 +202,17 @@ export class PlcController {
             }
           },
           required: ['value']
+        },
+        {
+          type: 'object',
+          properties: {
+            value: {
+              type: 'boolean',
+              description: '불린 값 (bool 타입 데이터 포인트용)',
+              example: true
+            }
+          },
+          required: ['value']
         }
       ]
     }
@@ -210,32 +221,40 @@ export class PlcController {
   @ApiResponse({ status: 400, description: '잘못된 데이터 타입 또는 데이터 포인트를 찾을 수 없음' })
   async writeData(
     @Param('key') key: string,
-    @Body() body: WriteNumbersDto | WriteStringDto,
+    @Body() body: WriteNumbersDto | WriteStringDto | WriteBoolDto,
   ): Promise<{ message: string; saved: PlcDataResponseDto }> {
-    const definition = await this.pollingService.getDataPoint(key);
+    const definition = await this.plcService.getDataPoint(key);
     if (!definition) {
       throw new BadRequestException(`Data point '${key}' not found`);
     }
 
-    let value: number[] | string;
+    let value: number[] | string | boolean;
 
     if (definition.type === 'number') {
       if ('values' in body) {
         value = body.values;
       } else {
-        throw new BadRequestException(`Data point ${key} expects number array (values), but got string`);
+        throw new BadRequestException(`Data point ${key} expects number array (values)`);
       }
-    } else {
-      if ('value' in body) {
+    } else if (definition.type === 'string') {
+      if ('value' in body && typeof body.value === 'string') {
         value = body.value;
       } else {
-        throw new BadRequestException(`Data point ${key} expects string (value), but got number array`);
+        throw new BadRequestException(`Data point ${key} expects string (value)`);
       }
+    } else if (definition.type === 'bool') {
+      if ('value' in body && typeof body.value === 'boolean') {
+        value = body.value;
+      } else {
+        throw new BadRequestException(`Data point ${key} expects boolean (value)`);
+      }
+    } else {
+      throw new BadRequestException(`Unknown data point type: ${definition.type}`);
     }
 
     try {
-      await this.pollingService.writeValue(key, value);
-      const saved = await this.pollingService.getCacheItem(key);
+      await this.plcService.writeValue(key, value);
+      const saved = await this.plcService.getCacheItem(key);
 
       return {
         message: `Data written to PLC and saved to DB for ${key}`,

@@ -1,6 +1,6 @@
 import { IsString, IsNumber, IsArray, IsEnum, IsOptional, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DeviceCode } from '../mc-protocol.service';
+import { DeviceCode } from '../services/plc-communication.service';
 
 export class RegisterDataPointDto {
   @ApiProperty({
@@ -33,6 +33,12 @@ export class WriteStringDto {
   value: string;
 }
 
+export class WriteBoolDto {
+  @ApiProperty({ description: '쓸 불린 값', example: true })
+  @IsBoolean()
+  value: boolean;
+}
+
 export class SetPollingIntervalDto {
   @ApiProperty({ description: '폴링 간격 (밀리초)', example: 1000 })
   @IsNumber()
@@ -40,8 +46,8 @@ export class SetPollingIntervalDto {
 }
 
 export class PlcDataResponseDto {
-  @ApiProperty({ description: '읽은 데이터 값 (숫자 배열 또는 문자열)' })
-  value: number[] | string;
+  @ApiProperty({ description: '읽은 데이터 값 (숫자 배열, 문자열, 또는 불린)' })
+  value: number[] | string | boolean;
 
   @ApiProperty({ description: '데이터 읽은 시간' })
   timestamp: Date;
@@ -72,21 +78,18 @@ export class DataPointInfoDto {
   @ApiProperty({ description: '설명' })
   description: string;
 
-  @ApiProperty({ description: '디바이스 코드' })
-  device: number;
+  @ApiProperty({ description: '주소 타입 (D, R, M, X, Y)' })
+  addressType: string;
 
   @ApiProperty({ description: '시작 주소' })
   address: number;
 
-  @ApiProperty({ description: '워드 수' })
-  count: number;
+  @ApiProperty({ description: 'number 타입: 워드 수, string 타입: 문자 수' })
+  length: number;
 
-  @ApiProperty({ description: '데이터 타입' })
+  @ApiPropertyOptional({ description: '비트 위치 (0-15, bool 타입 전용)' })
+  bit?: number;
+
+  @ApiProperty({ description: '데이터 타입 (number, string, bool)' })
   type: string;
-
-  @ApiPropertyOptional({ description: '인코딩' })
-  encoding?: string;
-
-  @ApiPropertyOptional({ description: '최대 문자 수' })
-  maxChars?: number;
 }

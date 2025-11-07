@@ -16,9 +16,13 @@ export interface PlcConfig {
   port: number;
 }
 
+/**
+ * PLC 통신 전용 서비스
+ * Mitsubishi MC Protocol 3E Binary 통신만 담당
+ */
 @Injectable()
-export class McProtocolService {
-  private readonly logger = new Logger(McProtocolService.name);
+export class PlcCommunicationService {
+  private readonly logger = new Logger(PlcCommunicationService.name);
 
   constructor(private readonly config: PlcConfig) {}
 
@@ -170,6 +174,51 @@ export class McProtocolService {
       start,
       nums.map((n) => n & 0xffff),
     );
+  }
+
+  /**
+   * 특정 워드의 특정 비트를 읽습니다 (0-15)
+   */
+  async readBit(
+    dev: DeviceCode,
+    address: number,
+    bit: number,
+  ): Promise<boolean> {
+    if (bit < 0 || bit > 15) {
+      throw new Error('Bit position must be between 0 and 15');
+    }
+
+    const words = await this.readWords(dev, address, 1);
+    const word = words[0];
+    return Boolean((word >> bit) & 1);
+  }
+
+  /**
+   * 특정 워드의 특정 비트를 씁니다 (0-15)
+   */
+  async writeBit(
+    dev: DeviceCode,
+    address: number,
+    bit: number,
+    value: boolean,
+  ): Promise<void> {
+    if (bit < 0 || bit > 15) {
+      throw new Error('Bit position must be between 0 and 15');
+    }
+
+    // 먼저 현재 값을 읽어옵니다
+    const words = await this.readWords(dev, address, 1);
+    let word = words[0];
+
+    // 비트를 설정하거나 클리어합니다
+    if (value) {
+      word |= (1 << bit);
+    } else {
+      word &= ~(1 << bit);
+    }
+
+    // 수정된 값을 씁니다
+    await this.writeWords(dev, address, [word]);
   }
 
   async readString(

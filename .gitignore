@@ -1,5 +1,21 @@
-# output
-/dist
+# OS
+.DS_Store
+Thumbs.db
 
-# module
-/node_modules
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temp
+*.tmp
+*.bak
+
+# SQLite database (if in root by mistake)
+*.sqlite
+*.db

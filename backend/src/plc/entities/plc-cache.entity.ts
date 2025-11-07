@@ -6,7 +6,7 @@ export class PlcCache {
   key: string;
 
   @Column('simple-json')
-  value: number[] | string;
+  value: number[] | string | boolean;
 
   @UpdateDateColumn()
   timestamp: Date;
