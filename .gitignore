@@ -15,7 +15,3 @@ Thumbs.db
 # Temp
 *.tmp
 *.bak
-
-# SQLite database (if in root by mistake)
-*.sqlite
-*.db

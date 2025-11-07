@@ -10,10 +10,6 @@ build/
 .env.local
 .env.*.local
 
-# database
-*.sqlite
-*.db
-
 # logs
 logs/
 *.log
