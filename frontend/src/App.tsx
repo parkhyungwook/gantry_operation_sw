@@ -1,8 +1,11 @@
 // src/App.tsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
-import RegisterPage from "./pages/RegisterPage";
-import MonitorPage from "./pages/MonitorPage";
+import DataSetPage from "./pages/DataSetPage";
+import TagPage from "./pages/TagPage";
+import TagMonitorPage from "./pages/TagMonitorPage";
+import ProcessDemoPage from "./pages/ProcessDemoPage";
+import HardwareProfileDemoPage from "./pages/HardwareProfileDemoPage";
 import "./App.css";
 
 function App() {
@@ -19,8 +22,23 @@ function App() {
                 </NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to="/register" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
-                  Register Data Point
+                <NavLink to="/datasets" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
+                  DataSets
+                </NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink to="/tags" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
+                  Tags
+                </NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink to="/process-demo" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
+                  Process Demo
+                </NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink to="/hardware-demo" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
+                  Hardware Demo
                 </NavLink>
               </li>
             </ul>
@@ -29,8 +47,11 @@ function App() {
 
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<MonitorPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/" element={<TagMonitorPage />} />
+            <Route path="/datasets" element={<DataSetPage />} />
+            <Route path="/tags" element={<TagPage />} />
+            <Route path="/process-demo" element={<ProcessDemoPage />} />
+            <Route path="/hardware-demo" element={<HardwareProfileDemoPage />} />
           </Routes>
         </main>
       </div>

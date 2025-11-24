@@ -1,2 +1,2 @@
 // src/plc/plc.types.ts
-export type PlcValue = number[] | string | boolean;
+export type PlcValue = number | number[] | string | boolean;

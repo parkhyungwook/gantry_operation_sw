@@ -1,0 +1,32 @@
+/* src/pages/TagPage.css */
+
+.tag-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.badge-int16 {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-int32 {
+  background-color: #e0e7ff;
+  color: #4f46e5;
+}
+
+.badge-real {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-string {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.badge-bool {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}

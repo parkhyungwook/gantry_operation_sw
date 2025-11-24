@@ -3,17 +3,19 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PlcCommunicationService, PlcConfig } from './services/plc-communication.service';
 import { PlcDbService } from './services/plc-db.service';
-import { PlcService } from './services/plc.service';
-import { PlcController } from './plc.controller';
-import { DataPoint } from './entities/data-point.entity';
-import { PlcCache } from './entities/plc-cache.entity';
+import { TagService } from './services/tag.service';
+import { TagController } from './tag.controller';
+import { DataSet } from './entities/data-set.entity';
+import { Tag } from './entities/tag.entity';
+import { TagCache } from './entities/tag-cache.entity';
+import { COMMUNICATION_SERVICE } from '../communication/communication.types';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([DataPoint, PlcCache]),
+    TypeOrmModule.forFeature([DataSet, Tag, TagCache]),
   ],
-  controllers: [PlcController],
+  controllers: [TagController],
   providers: [
     {
       provide: 'PLC_CONFIG',
@@ -30,9 +32,13 @@ import { PlcCache } from './entities/plc-cache.entity';
       },
       inject: ['PLC_CONFIG'],
     },
+    {
+      provide: COMMUNICATION_SERVICE,
+      useExisting: PlcCommunicationService,
+    },
     PlcDbService,
-    PlcService,
+    TagService,
   ],
-  exports: [PlcCommunicationService, PlcDbService, PlcService],
+  exports: [COMMUNICATION_SERVICE, PlcDbService, TagService],
 })
 export class PlcModule {}

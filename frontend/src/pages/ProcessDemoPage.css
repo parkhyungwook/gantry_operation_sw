@@ -1,0 +1,51 @@
+.process-demo-page .card-grid.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.process-demo-page .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.process-demo-page .log-box {
+  background: #0c0c0c;
+  color: #d1f7ff;
+  padding: 12px;
+  border-radius: 8px;
+  min-height: 160px;
+  font-size: 12px;
+  overflow: auto;
+}
+
+.process-demo-page .list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.process-demo-page .list li {
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.process-demo-page .sub-section {
+  border: 1px dashed #ddd;
+  padding: 8px;
+  margin: 8px 0;
+  border-radius: 6px;
+}
+
+.process-demo-page .sub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.process-demo-page .form-field.small {
+  min-width: 80px;
+}

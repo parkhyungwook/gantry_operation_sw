@@ -1,0 +1,26 @@
+/* src/pages/DataSetPage.css */
+
+.dataset-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.key-cell {
+  font-family: "Courier New", monospace;
+  font-weight: 600;
+}
+
+.badge-enabled {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.badge-disabled {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}

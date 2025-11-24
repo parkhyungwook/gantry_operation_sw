@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { DataPoint } from "../entities/data-point.entity";
-import { PlcCache } from "../entities/plc-cache.entity";
+import { DataSet } from "../entities/data-set.entity";
+import { Tag } from "../entities/tag.entity";
+import { TagCache } from "../entities/tag-cache.entity";
 import { PlcValue } from "../plc.types";
 
 /**
@@ -12,43 +13,78 @@ import { PlcValue } from "../plc.types";
 @Injectable()
 export class PlcDbService {
   constructor(
-    @InjectRepository(DataPoint)
-    private readonly dataPointRepo: Repository<DataPoint>,
-    @InjectRepository(PlcCache)
-    private readonly cacheRepo: Repository<PlcCache>
+    @InjectRepository(DataSet)
+    private readonly dataSetRepo: Repository<DataSet>,
+    @InjectRepository(Tag)
+    private readonly tagRepo: Repository<Tag>,
+    @InjectRepository(TagCache)
+    private readonly tagCacheRepo: Repository<TagCache>
   ) {}
 
-  // ==================== DataPoint CRUD ====================
-  async createDataPoint(dataPoint: DataPoint): Promise<DataPoint> {
-    return this.dataPointRepo.save(dataPoint);
+  // ==================== DataSet CRUD ====================
+  async createDataSet(dataSet: DataSet): Promise<DataSet> {
+    return this.dataSetRepo.save(dataSet);
   }
 
-  async findDataPoint(key: string): Promise<DataPoint | null> {
-    return this.dataPointRepo.findOne({ where: { key } });
+  async findDataSet(id: number): Promise<DataSet | null> {
+    return this.dataSetRepo.findOne({ where: { id }, relations: ["tags"] });
   }
 
-  async findAllDataPoints(): Promise<DataPoint[]> {
-    return this.dataPointRepo.find();
+  async findAllDataSets(): Promise<DataSet[]> {
+    return this.dataSetRepo.find({ relations: ["tags"] });
   }
 
-  async deleteDataPoint(key: string): Promise<void> {
-    await this.dataPointRepo.delete({ key });
+  async findEnabledDataSets(): Promise<DataSet[]> {
+    return this.dataSetRepo.find({ where: { enabled: true }, relations: ["tags"] });
   }
 
-  // ==================== PlcCache CRUD ====================
-  async saveCache(cache: { key: string; value: PlcValue; timestamp: Date; error?: string }): Promise<PlcCache> {
-    return this.cacheRepo.save(cache);
+  async updateDataSet(id: number, updates: Partial<DataSet>): Promise<void> {
+    await this.dataSetRepo.update(id, updates);
   }
 
-  async findCache(key: string): Promise<PlcCache | null> {
-    return this.cacheRepo.findOne({ where: { key } });
+  async deleteDataSet(id: number): Promise<void> {
+    await this.dataSetRepo.delete(id);
   }
 
-  async findAllCache(): Promise<PlcCache[]> {
-    return this.cacheRepo.find();
+  // ==================== Tag CRUD ====================
+  async createTag(tag: Tag): Promise<Tag> {
+    return this.tagRepo.save(tag);
   }
 
-  async clearAllCache(): Promise<void> {
-    await this.cacheRepo.clear();
+  async findTag(key: string): Promise<Tag | null> {
+    return this.tagRepo.findOne({ where: { key }, relations: ["dataSet"] });
+  }
+
+  async findAllTags(): Promise<Tag[]> {
+    return this.tagRepo.find({ relations: ["dataSet"] });
+  }
+
+  async findTagsByDataSet(dataSetId: number): Promise<Tag[]> {
+    return this.tagRepo.find({ where: { dataSetId }, relations: ["dataSet"] });
+  }
+
+  async updateTag(key: string, updates: Partial<Tag>): Promise<void> {
+    await this.tagRepo.update(key, updates);
+  }
+
+  async deleteTag(key: string): Promise<void> {
+    await this.tagRepo.delete(key);
+  }
+
+  // ==================== TagCache CRUD ====================
+  async saveTagCache(cache: { key: string; value: PlcValue; timestamp: Date; error?: string }): Promise<TagCache> {
+    return this.tagCacheRepo.save(cache);
+  }
+
+  async findTagCache(key: string): Promise<TagCache | null> {
+    return this.tagCacheRepo.findOne({ where: { key } });
+  }
+
+  async findAllTagCache(): Promise<TagCache[]> {
+    return this.tagCacheRepo.find();
+  }
+
+  async clearAllTagCache(): Promise<void> {
+    await this.tagCacheRepo.clear();
   }
 }

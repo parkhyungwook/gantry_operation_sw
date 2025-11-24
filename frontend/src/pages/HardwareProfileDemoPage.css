@@ -1,0 +1,33 @@
+.hp-demo-page .card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hp-demo-page .sub-section {
+  border: 1px dashed #ddd;
+  padding: 8px;
+  margin: 8px 0;
+  border-radius: 6px;
+}
+
+.hp-demo-page .sub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.hp-demo-page .form-field.small {
+  min-width: 80px;
+}
+
+.hp-demo-page .log-box {
+  background: #0c0c0c;
+  color: #d1f7ff;
+  padding: 12px;
+  border-radius: 8px;
+  min-height: 160px;
+  font-size: 12px;
+  overflow: auto;
+}
