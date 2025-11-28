@@ -11,21 +11,19 @@
 }
 
 .hd-list-inner {
-  width: 85%;
+  width: 70%;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 /* -------------------------------
    Header
 ---------------------------------- */
 .hd-list-header {
-  width: 95%;
-  margin: 0 auto 16px auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 16px;
 }
 
 .hd-list-header h2 {
@@ -54,7 +52,6 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  width: 95%;
 }
 
 /* -------------------------------
@@ -99,6 +96,19 @@
 }
 
 /* -------------------------------
+   Applied indicator
+---------------------------------- */
+.hd-status-ok {
+  color: green;
+  font-weight: 700;
+}
+
+.hd-status-ng {
+  color: red;
+  font-weight: 700;
+}
+
+/* -------------------------------
    Details
 ---------------------------------- */
 .hd-details-row td {
@@ -112,8 +122,8 @@
   border-radius: 8px;
   margin-top: 4px;
   margin-bottom: 8px;
-  width: 98%;
-  max-width: 1280px;
+  width: 95%;
+  max-width: 1100px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -131,9 +141,20 @@
   font-weight: 700;
 }
 
-.hd-detail-actions-inline {
+.hd-detail-actions {
   display: flex;
   gap: 8px;
+}
+
+.hd-access-inline {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #2d7a2d;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 90px;
 }
 
 .hd-edit-btn {
@@ -150,12 +171,6 @@
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.05s;
 }
 
-.hd-edit-btn svg {
-  width: 16px;
-  height: 16px;
-  fill: currentColor;
-}
-
 .hd-edit-btn:hover {
   background: #eef5ff;
   border-color: #1f70d1;
@@ -164,16 +179,6 @@
 
 .hd-edit-btn:active {
   transform: translateY(1px);
-}
-
-.hd-delete-btn {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #e06b6b;
-  background: #ffecec;
-  color: #b52424;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .summary-sections {
@@ -200,6 +205,21 @@
   font-size: 13px;
 }
 
+.hd-detail-actions-inline {
+  display: flex;
+  gap: 8px;
+}
+
+.hd-delete-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #e06b6b;
+  background: #ffecec;
+  color: #b52424;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* -------------------------------
    Column widths
 ---------------------------------- */
@@ -211,7 +231,7 @@
 
 .hd-table thead th:nth-child(2),
 .hd-table tbody td:nth-child(2) {
-  width: 45%;
+  width: 40%;
 }
 
 .hd-table thead th:nth-child(3),
