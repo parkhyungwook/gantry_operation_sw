@@ -1,0 +1,240 @@
+/* -------------------------------
+   Layout
+---------------------------------- */
+.hd-list-page {
+  width: 100%;
+  height: calc(100vh - 80px);
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.hd-list-inner {
+<<<<<<< ours
+<<<<<<< ours
+  width: 85%;
+=======
+  width: 70%;
+>>>>>>> theirs
+=======
+  width: 70%;
+>>>>>>> theirs
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------------------------------
+   Header
+---------------------------------- */
+.hd-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.hd-list-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.hd-add-btn {
+  background: #333;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* -------------------------------
+   Card
+---------------------------------- */
+.hd-list-card {
+  background: white;
+  padding: 18px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+<<<<<<< ours
+<<<<<<< ours
+  width: 95%;
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+}
+
+/* -------------------------------
+   Table
+---------------------------------- */
+.hd-table {
+  width: 100%;
+  border-collapse: collapse;
+  vertical-align: middle;
+}
+
+.hd-table thead th {
+  background: #f3f3f3;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+}
+
+.hd-table tbody td {
+  padding: 10px 12px;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.hd-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hd-row:hover {
+  background: #f2f6fb;
+}
+
+.hd-row.selected {
+  background: #e8f4ff;
+}
+
+.hd-row.selected:hover {
+  background: #d9ecff;
+}
+
+/* -------------------------------
+   Applied indicator
+---------------------------------- */
+.hd-status-ok {
+  color: green;
+  font-weight: 700;
+}
+
+.hd-status-ng {
+  color: red;
+  font-weight: 700;
+}
+
+/* -------------------------------
+   Details
+---------------------------------- */
+.hd-details-row td {
+  padding: 0;
+  border-bottom: none;
+}
+
+.hd-details {
+  background: #f9f9f9;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  width: 98%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hd-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.hd-details-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.hd-detail-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hd-access-inline {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #2d7a2d;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 90px;
+}
+
+.hd-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #d5dbe6;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f70d1;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+}
+
+.hd-edit-btn:hover {
+  background: #eef5ff;
+  border-color: #1f70d1;
+  box-shadow: 0 0 0 2px rgba(31, 112, 209, 0.1);
+}
+
+.hd-edit-btn:active {
+  transform: translateY(1px);
+}
+
+.summary-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.summary-card {
+  background: #fff;
+  border: 1px solid #e5e8ef;
+  border-radius: 8px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.summary-card h3 {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+}
+
+.summary-card p {
+  margin: 2px 0;
+  font-size: 13px;
+}
+
+/* -------------------------------
+   Column widths
+---------------------------------- */
+.hd-table thead th:first-child,
+.hd-table tbody td:first-child {
+  width: 60px;
+  text-align: center;
+}
+
+.hd-table thead th:nth-child(2),
+.hd-table tbody td:nth-child(2) {
+  width: 40%;
+}
+
+.hd-table thead th:nth-child(3),
+.hd-table tbody td:nth-child(3) {
+  width: 55%;
+}

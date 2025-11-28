@@ -1,15 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as net from 'net';
+import { COMMUNICATION_SERVICE, CommunicationService, DeviceCode } from '../../communication/communication.types';
 
 const HEADER_LEN_3E = 9;
-
-export enum DeviceCode {
-  D = 0xa8,
-  R = 0xaf,
-  M = 0x90,
-  X = 0x9c,
-  Y = 0x9d,
-}
 
 export interface PlcConfig {
   host: string;
@@ -22,7 +15,7 @@ export interface PlcConfig {
  * 영구 연결 방식으로 PLC와 단일 세션 유지
  */
 @Injectable()
-export class PlcCommunicationService {
+export class PlcCommunicationService implements CommunicationService {
   private readonly logger = new Logger(PlcCommunicationService.name);
   private socket: net.Socket | null = null;
   private isConnecting = false;
