@@ -19,12 +19,10 @@
 }
 
 /* 박스 자동 비례 확장 */
-.mainA-status-box { flex: 0.8; }
 .mainA-gantry-box { flex: 3; }
 .mainA-gripper-box { flex: 2; }
 
 /* 공통 박스 */
-.mainA-status-box,
 .mainA-gantry-box,
 .mainA-gripper-box {
   background: white;
@@ -45,7 +43,7 @@ h3 {
 .mainA-status-center-box {
   display: flex;
   justify-content: center;
-  margin-top: 2px;
+  margin-top: 10px;
 }
 .mainA-status {
   padding: 4px 10px;

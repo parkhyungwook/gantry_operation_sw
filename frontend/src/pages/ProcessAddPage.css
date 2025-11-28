@@ -1,0 +1,364 @@
+/* ===== 전체 레이아웃 ===== */
+.process-page {
+  width: 100%;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  box-sizing: border-box;
+  gap: 12px;
+  overflow: hidden; /* 페이지 전체 스크롤 금지 */
+}
+
+/* 상단 바: Process Detail + Save */
+.process-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Process Detail 토글 버튼 */
+.process-detail-toggle {
+  width: 20%;
+  min-width: 260px;
+  background: #f3f3f3;
+  border-radius: 999px;
+  padding: 10px 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  border: none;
+}
+
+/* Save 버튼 (단색) */
+.process-save-icon-btn {
+  background: #333;
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 22px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* 메인 3열 영역 */
+.process-main {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  overflow: hidden; /* 내부 컨테이너에서만 스크롤 */
+  margin-top: 8px;
+}
+
+/* ===== 공통 카드 스타일 ===== */
+.joblist-container,
+.flow-container,
+.config-container {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+/* ===== 좌측 Job List ===== */
+.joblist-container {
+  width: 20%;
+  min-width: 240px;
+  overflow-y: auto;  /* Job List 스크롤 가능 */
+}
+
+.joblist-container h2 {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* 그룹 헤더 */
+.joblist-group {
+  border-bottom: 1px solid #eee;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+}
+
+.joblist-group-header {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 6px 4px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #f4f4f4;
+  border-radius: 6px;
+}
+
+.joblist-group-header:hover {
+  background: #eaeaea;
+}
+
+/* 그룹 내부 아이템 */
+.joblist-items {
+  margin-top: 6px;
+  padding-left: 6px;
+}
+
+.joblist-item {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  cursor: grab;
+  transition: 0.1s;
+}
+
+.joblist-item:hover {
+  background: #f0f0f0;
+}
+
+/* ===== 가운데 Flow ===== */
+.flow-container {
+  width: 25%;
+  min-width: 260px;
+  overflow: hidden;
+}
+
+.flow-container h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Flow 내부 스크롤 영역 */
+.flow-scroll {
+  margin-top: 12px;
+  padding-right: 4px;
+  height: 100%;
+  overflow-y: auto; /* 오직 여기만 스크롤 */
+}
+
+/* 기본 placeholder */
+.flow-placeholder {
+  margin-top: 10px;
+  padding: 16px;
+  text-align: center;
+  color: #777;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+}
+
+/* 드롭 위치 placeholder(슬롯 안) */
+.flow-placeholder-slot {
+  border: 2px dashed #4a90e2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: #f0f6ff;
+  text-align: center;
+  font-size: 13px;
+  color: #4a90e2;
+}
+
+/* 슬롯 자체 (시각적인 여백용) */
+.flow-drop-slot {
+  min-height: 4px;
+}
+
+/* Step 카드 */
+.flow-step {
+  display: flex;
+  align-items: center;
+  background: #f6f6f6;
+  border: 1px solid #ddd;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: grab;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.flow-step:hover {
+  background: #eee;
+}
+
+.flow-step.selected {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+/* 드래그 중일 때 */
+.flow-step.dragging {
+  background: #ddd;
+  opacity: 0.7;
+}
+
+/* Step 내용 */
+.flow-step-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flow-step-name {
+  font-weight: 600;
+}
+
+.flow-step-group {
+  font-size: 12px;
+  color: #666;
+}
+
+/* ===== 오른쪽 Step Detail 패널 ===== */
+.config-container {
+  flex: 1;
+  min-width: 300px;
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.config-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.delete-step-btn {
+  background: #d9534f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.delete-step-btn:hover {
+  background: #c9302c;
+}
+
+.config-body {
+  margin-top: 10px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.config-placeholder {
+  margin-top: 20px;
+  color: #888;
+}
+
+.config-box p {
+  margin: 6px 0;
+}
+
+/* 입력 공통 */
+.label {
+  margin-top: 10px;
+  font-weight: 600;
+  display: block;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Step Detail Apply 버튼 (우하단) */
+.config-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.apply-btn {
+  background: #2d7a2d;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.apply-btn:disabled {
+  background: #ccc;
+  cursor: default;
+}
+
+.apply-btn:not(:disabled):hover {
+  background: #226422;
+}
+
+/* ===== Process Detail Overlay ===== */
+.process-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.process-detail-modal {
+  background: white;
+  padding: 20px 22px;
+  border-radius: 12px;
+  width: 80%;
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.process-detail-modal h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 10px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.process-detail-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.process-detail-close-btn {
+  background: #555;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}

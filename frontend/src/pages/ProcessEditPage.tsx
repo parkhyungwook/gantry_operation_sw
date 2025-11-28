@@ -39,6 +39,7 @@ type ProcessEditLocationState = {
     name?: string;
     description?: string;
     steps?: Step[];
+    hardware?: { id?: string };
   };
 };
 

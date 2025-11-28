@@ -5,9 +5,16 @@ import MonitorPage from './pages/MonitorPage';
 
 import MainPage from './pages/MainPage';
 import HardwareDefinitionPage from './pages/HardwareDefinitionPage';
+import HardwareDefinitionAddPage from './pages/HardwareDefinitionAddPage';
+import HardwareDefinitionEditPage from './pages/HardwareDefinitionEditPage';
+
 import ProcessPage from './pages/ProcessPage';
+import ProcessEditPage from './pages/ProcessEditPage';
 import DiagnosisPage from './pages/DiagnosisPage';
 import SettingPage from './pages/SettingPage';
+import ProcessAddPage from "./pages/ProcessAddPage";
+import AddressMonitorPage from "./pages/AddressMonitorPage";
+import AddressCommentEditPage from "./pages/AddressCommentEditPage";
 import './App.css';
 
 function App() {
@@ -17,36 +24,46 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {/* 상단 바 */}
+        {/* Top navbar */}
         <nav className="navbar">
           <button className="menu-btn" onClick={toggleSidebar}>☰</button>
           <img src="/logo.png" alt="Logo" className="nav-logo-img" />
         </nav>
 
-        {/* 좌측 사이드바 */}
+        {/* Sidebar */}
         <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
           <button className="close-sidebar" onClick={toggleSidebar}>×</button>
           <ul>
-            <li><Link to="/" onClick={toggleSidebar}>Home (Monitoring) </Link></li>
+            <li><Link to="/" onClick={toggleSidebar}>Home (Monitoring)</Link></li>
             <li><Link to="/hardware" onClick={toggleSidebar}>Hardware Definition</Link></li>
             <li><Link to="/process" onClick={toggleSidebar}>Process</Link></li>
             <li><Link to="/diagnosis" onClick={toggleSidebar}>Diagnosis</Link></li>
+            <li><Link to="/address-monitor" onClick={toggleSidebar}>Address Monitor</Link></li>
             <li><Link to="/setting" onClick={toggleSidebar}>Setting</Link></li>
 
-            <li><Link to="/monitor" onClick={toggleSidebar}> TEST1 : Monitor</Link></li>
-            <li><Link to="/register" onClick={toggleSidebar}> TEST2 :Register Data Point</Link></li>
+            <li><Link to="/monitor" onClick={toggleSidebar}>TEST1 : Monitor</Link></li>
+            <li><Link to="/register" onClick={toggleSidebar}>TEST2 : Register Data Point</Link></li>
           </ul>
         </div>
 
-        {/* 메인 컨텐츠 */}
+        {/* Main content */}
         <main className="main-content">
-        <Routes>
+          <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/monitor" element={<MonitorPage />} />
             <Route path="/register" element={<RegisterPage />} />
+
+            {/* Hardware Definition */}
             <Route path="/hardware" element={<HardwareDefinitionPage />} />
+            <Route path="/hardware/edit/:id" element={<HardwareDefinitionEditPage />} />
+            <Route path="/hardware/add" element={<HardwareDefinitionAddPage />} />
+
             <Route path="/process" element={<ProcessPage />} />
+            <Route path="/process/add" element={<ProcessAddPage />} />
+            <Route path="/process/edit/:id" element={<ProcessEditPage />} />
             <Route path="/diagnosis" element={<DiagnosisPage />} />
+            <Route path="/address-monitor" element={<AddressMonitorPage />} />
+            <Route path="/address-monitor/edit" element={<AddressCommentEditPage />} />
             <Route path="/setting" element={<SettingPage />} />
           </Routes>
         </main>

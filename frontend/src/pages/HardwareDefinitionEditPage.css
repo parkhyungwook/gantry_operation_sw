@@ -1,0 +1,100 @@
+/* 전체 레이아웃 */
+.hardware-page {
+  width: 100%;
+  height: calc(100vh - 80px);
+  overflow: hidden;
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+}
+
+/* 중앙 정렬 + AddPage와 동일 width */
+.edit-container {
+  width: 70%;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* 카드 스타일 */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  margin-bottom: 16px;
+}
+
+/* 서브 카드 */
+.sub-card {
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 10px;
+}
+
+/* 라벨 */
+.label {
+  margin-top: 10px;
+  font-weight: 600;
+  display: block;
+}
+
+/* 입력 & 셀렉트 (AddPage와 동일한 크기 & 패딩) */
+.input,
+.select {
+  margin-top: 4px;
+  width: 90%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+}
+
+/* Header */
+.edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.edit-btn-area {
+  display: flex;
+  gap: 10px;
+}
+
+/* 버튼 공통 */
+.back-btn,
+.save-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* 뒤로가기 */
+.back-btn {
+  background: #444;
+  color: white;
+}
+
+/* 저장 버튼 */
+.save-btn {
+  background: #2f7d32;
+  color: white;
+}
+
+.save-btn:disabled {
+  background: #8b8b8b;
+  cursor: not-allowed;
+}
+
+/* margin for bottom */
+.save-container {
+  margin-top: 20px;
+}

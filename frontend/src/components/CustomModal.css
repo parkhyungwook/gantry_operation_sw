@@ -1,0 +1,69 @@
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+  }
+  
+  .modal-box {
+    background: white;
+    padding: 24px;
+    width: 380px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: popup 0.2s ease-out;
+  }
+  
+  @keyframes popup {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  .modal-title {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  
+  .modal-message {
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  
+  .modal-btn {
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  
+  .modal-btn.cancel {
+    background: #ddd;
+  }
+  
+  .modal-btn.confirm {
+    background: #d9534f; /* default red (danger) */
+    color: white;
+  }
+  
+  /* green style for success / apply */
+  .modal-btn.confirm.confirm-green {
+    background: #28a745;
+  }
+  
+  /* explicit red class if needed */
+  .modal-btn.confirm.confirm-red {
+    background: #d9534f;
+  }
+  

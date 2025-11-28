@@ -27,10 +27,26 @@ type ProcessRow = {
   description: string;
   steps?: ProcessStep[];
   hardware?: {
-    name: string;
+    id?: string;
+    name?: string;
     controller?: string;
     description?: string;
-    id?: string;
+    gantry?: {
+      nickname?: string;
+      description?: string;
+      controller?: string;
+      host?: string;
+      port?: string;
+      series?: string;
+      axes?: number;
+      gripperCount?: number;
+      gripperType?: string;
+    };
+    machines?: { id: number; nickname: string; controller?: string; host?: string; port?: string }[];
+    stockers?: { id: number; nickname: string; type?: string }[];
+    turnovers?: { id: number; nickname: string; mode?: string }[];
+    buffers?: { id: number; nickname: string }[];
+    chutes?: { id: number; nickname: string }[];
   };
 };
 
@@ -41,9 +57,28 @@ const initialProcesses: ProcessRow[] = [
     name: "Main Production Process",
     description: "Full sequence for GL Main Line",
     hardware: {
+      id: "hw-1",
       name: "Gantry Loader A",
       controller: "Fanuc",
       description: "Main GL Line",
+      gantry: {
+        nickname: "Gantry Loader A",
+        description: "Main GL Line",
+        controller: "Fanuc",
+        host: "192.168.0.10",
+        port: "8193",
+        series: "GL Series",
+        axes: 3,
+        gripperCount: 1,
+        gripperType: "Rotate",
+      },
+      machines: [
+        { id: 0, nickname: "Machine 1", controller: "Fanuc", host: "192.168.0.11", port: "8193" },
+      ],
+      stockers: [],
+      turnovers: [],
+      buffers: [],
+      chutes: [],
     },
     steps: [
       {
@@ -75,9 +110,26 @@ const initialProcesses: ProcessRow[] = [
     name: "Backup Test Process",
     description: "Spare testing workflow",
     hardware: {
+      id: "hw-2",
       name: "Backup Config B",
       controller: "Fanuc",
       description: "Test Line",
+      gantry: {
+        nickname: "Gantry Loader A",
+        description: "Main GL Line",
+        controller: "Fanuc",
+        host: "192.168.0.10",
+        port: "8193",
+        series: "GL Series",
+        axes: 3,
+        gripperCount: 1,
+        gripperType: "Rotate",
+      },
+      machines: [],
+      stockers: [],
+      turnovers: [],
+      buffers: [],
+      chutes: [],
     },
     steps: [
       {

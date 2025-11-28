@@ -11,27 +11,21 @@
 }
 
 .hd-list-inner {
-<<<<<<< ours
-<<<<<<< ours
   width: 85%;
-=======
-  width: 70%;
->>>>>>> theirs
-=======
-  width: 70%;
->>>>>>> theirs
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 /* -------------------------------
    Header
 ---------------------------------- */
 .hd-list-header {
+  width: 95%;
+  margin: 0 auto 16px auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
 }
 
 .hd-list-header h2 {
@@ -60,13 +54,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-<<<<<<< ours
-<<<<<<< ours
   width: 95%;
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
 }
 
 /* -------------------------------
@@ -111,19 +99,6 @@
 }
 
 /* -------------------------------
-   Applied indicator
----------------------------------- */
-.hd-status-ok {
-  color: green;
-  font-weight: 700;
-}
-
-.hd-status-ng {
-  color: red;
-  font-weight: 700;
-}
-
-/* -------------------------------
    Details
 ---------------------------------- */
 .hd-details-row td {
@@ -156,20 +131,9 @@
   font-weight: 700;
 }
 
-.hd-detail-actions {
+.hd-detail-actions-inline {
   display: flex;
   gap: 8px;
-}
-
-.hd-access-inline {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
-  background: #2d7a2d;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  min-width: 90px;
 }
 
 .hd-edit-btn {
@@ -186,6 +150,12 @@
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.05s;
 }
 
+.hd-edit-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
 .hd-edit-btn:hover {
   background: #eef5ff;
   border-color: #1f70d1;
@@ -196,9 +166,19 @@
   transform: translateY(1px);
 }
 
+.hd-delete-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #e06b6b;
+  background: #ffecec;
+  color: #b52424;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .summary-sections {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
@@ -231,7 +211,7 @@
 
 .hd-table thead th:nth-child(2),
 .hd-table tbody td:nth-child(2) {
-  width: 40%;
+  width: 45%;
 }
 
 .hd-table thead th:nth-child(3),

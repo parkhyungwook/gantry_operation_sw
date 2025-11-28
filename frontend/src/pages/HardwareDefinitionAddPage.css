@@ -1,0 +1,110 @@
+.hardware-page {
+    width: 100%;
+    height: calc(100vh - 80px);
+    overflow: hidden;
+    padding: 16px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .edit-container {
+    width: 70%;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  
+  .summary-view {
+    width: 70%;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  
+  .card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    margin-bottom: 16px;
+  }
+  
+  .sub-card {
+    background: #f7f7f7;
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 10px;
+  }
+  
+  .label {
+    margin-top: 10px;
+    font-weight: 600;
+    display: block;
+  }
+  
+  .input,
+  .select {
+    margin-top: 4px;
+    width: 90%;
+    padding: 10px 12px;  /* 동일 padding */
+    font-size: 15px;     /* 동일 텍스트 크기 */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    margin-bottom: 14px;
+  }
+  
+  .next-container {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 10px;
+  }
+  
+  .next-btn {
+    background: rgb(92, 92, 92);
+    color: white;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  
+  .summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .summary-btn-area {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .edit-btn,.save-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  .edit-btn {
+    background: #333;
+    color: white;
+  }
+  
+  .summary-sections {
+    margin-top: 20px;
+  }
+  
+  .summary-card {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  
