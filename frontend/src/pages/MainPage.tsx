@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./MainPage.css";
 
 type AxisState = {
@@ -39,17 +39,27 @@ const fallbackHardware: AppliedHardware = {
     host: "",
     port: "",
     series: "",
-    axes: 4,
-    gripperCount: 2,
+    axes: 3,
+    gripperCount: 0,
     gripperType: "",
   },
 };
 
 const fallbackAxisData: Record<string, AxisState> = {
-  X: { pos: 123.456, ref: true, load: 40 },
-  Y: { pos: 50.123, ref: false, load: 70 },
-  Z: { pos: -10.555, ref: true, load: 20 },
-  C: { pos: 5.0, ref: false, load: 55 },
+  X: { pos: 0, ref: true, load: 0 },
+  Y: { pos: 0, ref: false, load: 0 },
+  Z: { pos: 0, ref: true, load: 0 },
+  C: { pos: 0, ref: false, load: 0 },
+};
+
+const feedrate = 0;
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const TAG_KEYS = {
+  position: { X: "x_position", Y: "y_position", Z: "z_position", C: "c_position" },
+  load: { X: "x_load", Y: "y_load", Z: "z_load", C: "c_load" },
+  feedrate: "feedrate",
+  trigger: "move_trigger", // D0.0 토글용 Tag key (bool/bit 태그에 맞게 조정)
 };
 
 const axisOrder = ["X", "Y", "Z", "C", "B", "A"];
@@ -58,6 +68,12 @@ const MainPage: React.FC = () => {
   const [panel, setPanel] = useState<number>(1);
   const [appliedHardware, setAppliedHardware] =
     useState<AppliedHardware | null>(null);
+  const [axisData, setAxisData] = useState<Record<string, AxisState>>(fallbackAxisData);
+  const [feedrateValue, setFeedrateValue] = useState<number>(feedrate);
+  const [triggerOn, setTriggerOn] = useState<boolean>(false);
+
+  const latestAxisRef = useRef<Record<string, AxisState>>(fallbackAxisData);
+  const latestFeedrateRef = useRef<number>(feedrate);
 
   useEffect(() => {
     const saved = localStorage.getItem("appliedHardware");
@@ -75,19 +91,140 @@ const MainPage: React.FC = () => {
     return axisOrder.slice(0, Math.max(0, count));
   }, [appliedHardware]);
 
-  const axisData = useMemo<Record<string, AxisState>>(() => {
+  useEffect(() => {
     const defaultState: AxisState = { pos: 0, ref: false, load: 0 };
     const fallbackList = Object.values(fallbackAxisData);
-
-    return axes.reduce((acc, axis, index) => {
+    const next = axes.reduce((acc, axis, index) => {
       const fallback =
         fallbackAxisData[axis] ?? fallbackList[index] ?? defaultState;
       acc[axis] = fallback;
       return acc;
     }, {} as Record<string, AxisState>);
+    setAxisData(next);
+    latestAxisRef.current = next;
   }, [axes]);
 
-  const feedrate = 1200;
+  const startTagPolling = useCallback(async () => {
+    try {
+      await fetch(`${API_BASE_URL}/plc/tags/polling/start`, { method: "POST" });
+    } catch (err) {
+      console.warn("Failed to start tag polling", err);
+    }
+  }, []);
+
+  const fetchTagValue = useCallback(async (key: string): Promise<number | boolean | string | null> => {
+    if (!key) return null;
+    try {
+      const res = await fetch(`${API_BASE_URL}/plc/tags/${key}/value`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json?.value ?? null;
+    } catch (err) {
+      console.warn(`Failed to fetch tag ${key}`, err);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    let fetchTimer: ReturnType<typeof setInterval> | null = null;
+    let renderTimer: ReturnType<typeof setInterval> | null = null;
+    let unmounted = false;
+
+    startTagPolling();
+
+    const pollOnce = async () => {
+      const positionPromises = axes.map(async (axis) => {
+        const key = TAG_KEYS.position[axis as keyof typeof TAG_KEYS.position];
+        const value = await fetchTagValue(key);
+        return { axis, value };
+      });
+
+      const loadPromises = axes.map(async (axis) => {
+        const key = TAG_KEYS.load[axis as keyof typeof TAG_KEYS.load];
+        const value = await fetchTagValue(key);
+        return { axis, value };
+      });
+
+      const [positions, loads, feedVal, triggerVal] = await Promise.all([
+        Promise.all(positionPromises),
+        Promise.all(loadPromises),
+        fetchTagValue(TAG_KEYS.feedrate),
+        fetchTagValue(TAG_KEYS.trigger),
+      ]);
+
+      const next: Record<string, AxisState> = { ...latestAxisRef.current };
+
+      positions.forEach(({ axis, value }) => {
+        if (value === null || value === undefined) return;
+        const num = Number(value);
+        if (Number.isFinite(num)) {
+          const prev = next[axis] ?? { pos: 0, load: 0, ref: false };
+          next[axis] = { ...prev, pos: num };
+        }
+      });
+
+      loads.forEach(({ axis, value }) => {
+        if (value === null || value === undefined) return;
+        const num = Number(value);
+        if (Number.isFinite(num)) {
+          const prev = next[axis] ?? { pos: 0, load: 0, ref: false };
+          next[axis] = { ...prev, load: num };
+        }
+      });
+
+      latestAxisRef.current = next;
+
+      if (feedVal !== null && feedVal !== undefined) {
+        const num = Number(feedVal);
+        if (Number.isFinite(num)) {
+          latestFeedrateRef.current = num;
+        }
+      }
+
+      if (typeof triggerVal === "boolean") {
+        setTriggerOn(triggerVal);
+      }
+    };
+
+    // immediate first poll so UI updates without waiting
+    pollOnce();
+    fetchTimer = setInterval(pollOnce, 100); // 100ms fetch
+
+    renderTimer = setInterval(() => {
+      if (unmounted) return;
+      setAxisData((prev) => {
+        const next: Record<string, AxisState> = { ...prev };
+        axes.forEach((axis) => {
+          const latest = latestAxisRef.current[axis];
+          if (latest) {
+            next[axis] = { ...next[axis], ...latest };
+          }
+        });
+        return next;
+      });
+      setFeedrateValue(latestFeedrateRef.current);
+    }, 200); // 200ms render
+
+    return () => {
+      unmounted = true;
+      if (fetchTimer) clearInterval(fetchTimer);
+      if (renderTimer) clearInterval(renderTimer);
+    };
+  }, [axes, fetchTagValue, startTagPolling]);
+
+  const handleToggleTrigger = async () => {
+    const next = !triggerOn;
+    try {
+      await fetch(`${API_BASE_URL}/plc/tags/${TAG_KEYS.trigger}/value`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: next }),
+      });
+      setTriggerOn(next);
+    } catch (err) {
+      console.error("Failed to toggle trigger", err);
+    }
+  };
 
   const grippers = useMemo(
     () => {
@@ -133,7 +270,7 @@ const MainPage: React.FC = () => {
           {/* Feedrate */}
           <div className="sub-box">
             <div className="section-title">Feedrate</div>
-            <div className="feedrate-box">{feedrate} mm/min</div>
+            <div className="feedrate-box">{feedrateValue} mm/min</div>
           </div>
 
           {/* Loadmeter */}
@@ -172,6 +309,24 @@ const MainPage: React.FC = () => {
                 </span>
               </div>
             ))}
+          </div>
+          <div className="gripper-controls">
+            <button
+              className={`gripper-btn ${triggerOn ? "on" : ""}`}
+              onClick={handleToggleTrigger}
+              title="D0.0 Toggle"
+            >
+              {triggerOn ? "D0.0 ON" : "D0.0 OFF"}
+            </button>
+            <button className="gripper-btn" disabled>
+              -
+            </button>
+            <button className="gripper-btn" disabled>
+              -
+            </button>
+            <button className="gripper-btn" disabled>
+              -
+            </button>
           </div>
         </div>
       </div>
