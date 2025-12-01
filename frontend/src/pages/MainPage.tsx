@@ -1,4 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  getDataSets,
+  getTags,
+  getTagValue,
+  createDataSet,
+  createTag,
+  startTagPolling,
+  stopTagPolling,
+  writeTagValue,
+} from "../services/tagApi";
+import { Tag } from "../types";
 import "./MainPage.css";
 
 type AxisState = {
@@ -54,20 +65,28 @@ const fallbackAxisData: Record<string, AxisState> = {
 
 const feedrate = 0;
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+// 실제 태그 이름에 맞게 교체하세요.
+// @@@ TAG 추가: position/load/feedrate/trigger에 키를 추가/교체하면 됨
 const TAG_KEYS = {
+  // @@@ Position 예) U/W 축 추가하려면 아래에 W:"w_position" 형태로 추가
   position: { X: "x_position", Y: "y_position", Z: "z_position", C: "c_position" },
+  // @@@ Load 예) W 로드 추가하려면 W:"w_load" 추가
   load: { X: "x_load", Y: "y_load", Z: "z_load", C: "c_load" },
+  // @@@ Feedrate 태그명 교체 시 여기 수정
   feedrate: "feedrate",
-  trigger: "move_trigger", // D0.0 토글용 Tag key (bool/bit 태그에 맞게 조정)
+  // @@@ Trigger(D0.0) 태그명 교체 시 여기 수정
+  trigger: "move_trigger", // D0.0 토글용 Tag key
 };
 
 const axisOrder = ["X", "Y", "Z", "C", "B", "A"];
 
+// 개발 중 한 번만 실행하려면 true로 바꾼 뒤 실행, 다시 false로 돌려두세요.
+// @@@ 시드에 태그/주소를 추가하려면 seedTags 배열을 수정
+const RUN_SEED_ONCE = false;
+
 const MainPage: React.FC = () => {
   const [panel, setPanel] = useState<number>(1);
-  const [appliedHardware, setAppliedHardware] =
-    useState<AppliedHardware | null>(null);
+  const [appliedHardware, setAppliedHardware] = useState<AppliedHardware | null>(null);
   const [axisData, setAxisData] = useState<Record<string, AxisState>>(fallbackAxisData);
   const [feedrateValue, setFeedrateValue] = useState<number>(feedrate);
   const [triggerOn, setTriggerOn] = useState<boolean>(false);
@@ -95,8 +114,7 @@ const MainPage: React.FC = () => {
     const defaultState: AxisState = { pos: 0, ref: false, load: 0 };
     const fallbackList = Object.values(fallbackAxisData);
     const next = axes.reduce((acc, axis, index) => {
-      const fallback =
-        fallbackAxisData[axis] ?? fallbackList[index] ?? defaultState;
+      const fallback = fallbackAxisData[axis] ?? fallbackList[index] ?? defaultState;
       acc[axis] = fallback;
       return acc;
     }, {} as Record<string, AxisState>);
@@ -104,52 +122,93 @@ const MainPage: React.FC = () => {
     latestAxisRef.current = next;
   }, [axes]);
 
-  const startTagPolling = useCallback(async () => {
+  // 한 번만 시드: 이미 존재하면 건너뛰고, 없으면 생성
+  const seedPlcMetadata = async () => {
     try {
-      await fetch(`${API_BASE_URL}/plc/tags/polling/start`, { method: "POST" });
-    } catch (err) {
-      console.warn("Failed to start tag polling", err);
-    }
-  }, []);
+      const dsList = await getDataSets();
+      let dataSetId = dsList.find((d) => d.name === "motion_block")?.id;
 
-  const fetchTagValue = useCallback(async (key: string): Promise<number | boolean | string | null> => {
-    if (!key) return null;
-    try {
-      const res = await fetch(`${API_BASE_URL}/plc/tags/${key}/value`);
-      if (!res.ok) return null;
-      const json = await res.json();
-      return json?.value ?? null;
+      if (!dataSetId) {
+        const ds = await createDataSet({
+          name: "motion_block",
+          addressType: "D",
+          startAddress: 0,
+          length: 20,
+          pollingInterval: 100,
+          enabled: true,
+        });
+        dataSetId = ds.id;
+      }
+
+      if (!dataSetId) return;
+
+      const existingKeys = new Set((await getTags()).map((t) => t.key));
+      // @@@ 태그 목록: 읽고 싶은 주소/키를 추가/수정할 때 여기를 변경
+      const seedTags: Array<Omit<Tag, "dataSetId">> = [
+        { key: TAG_KEYS.position.X, description: "X pos", offset: 2, dataType: "real", wordLength: 2 },
+        { key: TAG_KEYS.position.Y, description: "Y pos", offset: 4, dataType: "real", wordLength: 2 },
+        { key: TAG_KEYS.position.Z, description: "Z pos", offset: 6, dataType: "real", wordLength: 2 },
+        { key: TAG_KEYS.position.C, description: "C pos", offset: 8, dataType: "real", wordLength: 2 },
+        { key: TAG_KEYS.load.X, description: "X load", offset: 10, dataType: "real", wordLength: 2 },
+        { key: TAG_KEYS.load.Y, description: "Y load", offset: 12, dataType: "real", wordLength: 2 },
+        { key: TAG_KEYS.load.Z, description: "Z load", offset: 14, dataType: "real", wordLength: 2 },
+        { key: TAG_KEYS.load.C, description: "C load", offset: 16, dataType: "real", wordLength: 2 },
+        { key: TAG_KEYS.feedrate, description: "Feedrate", offset: 18, dataType: "real", wordLength: 2 },
+        {
+          key: TAG_KEYS.trigger,
+          description: "Move trigger",
+          offset: 0,
+          dataType: "bool",
+          wordLength: 1,
+          bitPosition: 0,
+        },
+      ];
+
+      for (const t of seedTags) {
+        if (existingKeys.has(t.key)) continue;
+        await createTag({ ...t, dataSetId });
+      }
     } catch (err) {
-      console.warn(`Failed to fetch tag ${key}`, err);
-      return null;
+      console.warn("Seed skipped/failed", err);
     }
-  }, []);
+  };
 
   useEffect(() => {
     let fetchTimer: ReturnType<typeof setInterval> | null = null;
     let renderTimer: ReturnType<typeof setInterval> | null = null;
     let unmounted = false;
 
-    startTagPolling();
+    if (RUN_SEED_ONCE) {
+      seedPlcMetadata().catch((err) => console.warn("Seed error", err));
+    }
+    startTagPolling().catch((err) => console.warn("Failed to start tag polling", err));
 
     const pollOnce = async () => {
       const positionPromises = axes.map(async (axis) => {
         const key = TAG_KEYS.position[axis as keyof typeof TAG_KEYS.position];
-        const value = await fetchTagValue(key);
-        return { axis, value };
+        try {
+          const res = await getTagValue(key);
+          return { axis, value: res?.value ?? null };
+        } catch {
+          return { axis, value: null };
+        }
       });
 
       const loadPromises = axes.map(async (axis) => {
         const key = TAG_KEYS.load[axis as keyof typeof TAG_KEYS.load];
-        const value = await fetchTagValue(key);
-        return { axis, value };
+        try {
+          const res = await getTagValue(key);
+          return { axis, value: res?.value ?? null };
+        } catch {
+          return { axis, value: null };
+        }
       });
 
       const [positions, loads, feedVal, triggerVal] = await Promise.all([
         Promise.all(positionPromises),
         Promise.all(loadPromises),
-        fetchTagValue(TAG_KEYS.feedrate),
-        fetchTagValue(TAG_KEYS.trigger),
+        getTagValue(TAG_KEYS.feedrate).then((r) => r?.value ?? null).catch(() => null),
+        getTagValue(TAG_KEYS.trigger).then((r) => r?.value ?? null).catch(() => null),
       ]);
 
       const next: Record<string, AxisState> = { ...latestAxisRef.current };
@@ -183,13 +242,20 @@ const MainPage: React.FC = () => {
 
       if (typeof triggerVal === "boolean") {
         setTriggerOn(triggerVal);
+      } else if (triggerVal === 0 || triggerVal === 1) {
+        setTriggerOn(triggerVal === 1);
+      } else if (triggerVal === "0" || triggerVal === "1") {
+        setTriggerOn(triggerVal === "1");
+      } else if (triggerVal === "true" || triggerVal === "false") {
+        setTriggerOn(triggerVal === "true");
       }
     };
 
-    // immediate first poll so UI updates without waiting
+    // @@@ : 즉시 한 번 폴링 후 주기
     pollOnce();
     fetchTimer = setInterval(pollOnce, 100); // 100ms fetch
 
+    // @@@ 화면 업데이트 주기(ms) - 필요 시 숫자 변경
     renderTimer = setInterval(() => {
       if (unmounted) return;
       setAxisData((prev) => {
@@ -203,42 +269,34 @@ const MainPage: React.FC = () => {
         return next;
       });
       setFeedrateValue(latestFeedrateRef.current);
-    }, 200); // 200ms render
+    }, 100); // 200ms render
 
     return () => {
       unmounted = true;
       if (fetchTimer) clearInterval(fetchTimer);
       if (renderTimer) clearInterval(renderTimer);
+      stopTagPolling().catch((err) => console.warn("Failed to stop tag polling", err));
     };
-  }, [axes, fetchTagValue, startTagPolling]);
+  }, [axes]);
 
   const handleToggleTrigger = async () => {
     const next = !triggerOn;
     try {
-      await fetch(`${API_BASE_URL}/plc/tags/${TAG_KEYS.trigger}/value`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value: next }),
-      });
+      await writeTagValue(TAG_KEYS.trigger, next);
       setTriggerOn(next);
     } catch (err) {
       console.error("Failed to toggle trigger", err);
     }
   };
 
-  const grippers = useMemo(
-    () => {
-      const count =
-        appliedHardware?.gantry?.gripperCount ||
-        fallbackHardware.gantry.gripperCount;
+  const grippers = useMemo(() => {
+    const count = appliedHardware?.gantry?.gripperCount || fallbackHardware.gantry.gripperCount;
 
-      return Array.from({ length: Math.max(0, count) }, (_, idx) => ({
-        name: String.fromCharCode(65 + idx),
-        state: idx % 2 === 0,
-      }));
-    },
-    [appliedHardware]
-  );
+    return Array.from({ length: Math.max(0, count) }, (_, idx) => ({
+      name: String.fromCharCode(65 + idx),
+      state: idx % 2 === 0,
+    }));
+  }, [appliedHardware]);
 
   return (
     <div className="mainA-container">
@@ -260,9 +318,7 @@ const MainPage: React.FC = () => {
                   {axisData[axis].pos.toFixed(3)}
                 </span>
 
-                <span
-                  className={`axis-ref ${axisData[axis].ref ? "on" : ""}`}
-                ></span>
+                <span className={`axis-ref ${axisData[axis].ref ? "on" : ""}`}></span>
               </div>
             ))}
           </div>
@@ -283,14 +339,18 @@ const MainPage: React.FC = () => {
                 <div className="loadmeter-row">
                   <div className="loadmeter-bar">
                     <div
-                      className="loadmeter-fill"
+                      className={`loadmeter-fill ${
+                        axisData[axis].load < 31
+                          ? "low"
+                          : axisData[axis].load < 70
+                          ? "mid"
+                          : "high"
+                      }`}
                       style={{ width: `${axisData[axis].load}%` }}
                     ></div>
                   </div>
 
-                  <span className="loadmeter-value">
-                    {axisData[axis].load}%
-                  </span>
+                  <span className="loadmeter-value">{axisData[axis].load}%</span>
                 </div>
               </div>
             ))}
@@ -304,18 +364,12 @@ const MainPage: React.FC = () => {
             {grippers.map((g) => (
               <div key={g.name} className="gripper-row">
                 <span className="gripper-name">{g.name}</span>
-                <span className={g.state ? "status-green" : "status-red"}>
-                  {g.state ? "Clamp" : "Unclamp"}
-                </span>
+                <span className={g.state ? "status-green" : "status-red"}>{g.state ? "Clamp" : "Unclamp"}</span>
               </div>
             ))}
           </div>
           <div className="gripper-controls">
-            <button
-              className={`gripper-btn ${triggerOn ? "on" : ""}`}
-              onClick={handleToggleTrigger}
-              title="D0.0 Toggle"
-            >
+            <button className={`gripper-btn ${triggerOn ? "on" : ""}`} onClick={handleToggleTrigger} title="D0.0 Toggle">
               {triggerOn ? "D0.0 ON" : "D0.0 OFF"}
             </button>
             <button className="gripper-btn" disabled>
@@ -335,22 +389,13 @@ const MainPage: React.FC = () => {
       <div className="mainA-right">
         <div className="mainA-right-panel">
           <div className="panel-buttons">
-            <button
-              className={`panel-btn ${panel === 1 ? "selected" : ""}`}
-              onClick={() => setPanel(1)}
-            >
+            <button className={`panel-btn ${panel === 1 ? "selected" : ""}`} onClick={() => setPanel(1)}>
               A
             </button>
-            <button
-              className={`panel-btn ${panel === 2 ? "selected" : ""}`}
-              onClick={() => setPanel(2)}
-            >
+            <button className={`panel-btn ${panel === 2 ? "selected" : ""}`} onClick={() => setPanel(2)}>
               B
             </button>
-            <button
-              className={`panel-btn ${panel === 3 ? "selected" : ""}`}
-              onClick={() => setPanel(3)}
-            >
+            <button className={`panel-btn ${panel === 3 ? "selected" : ""}`} onClick={() => setPanel(3)}>
               C
             </button>
           </div>

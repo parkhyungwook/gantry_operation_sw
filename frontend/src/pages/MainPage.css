@@ -149,6 +149,17 @@ h3 {
   height: 100%;
   background: linear-gradient(to right, black, yellow, red);
 }
+
+/* loadmeter color by threshold */
+.loadmeter-fill.low {
+  background: #6bcf63; /* <30 green */
+}
+.loadmeter-fill.mid {
+  background: #f5d15f; /* 30-69 yellow */
+}
+.loadmeter-fill.high {
+  background: #e05656; /* >=70 red */
+}
 .loadmeter-value {
   width: 40px;
   text-align: right;
@@ -157,6 +168,39 @@ h3 {
 }
 
 /* Grippers */
+.gripper-controls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.gripper-btn {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid #d0d4da;
+  border-radius: 6px;
+  background: #f7f9fc;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.gripper-btn:hover:not(:disabled) {
+  background: #e8eef7;
+}
+
+.gripper-btn:disabled {
+  cursor: not-allowed;
+  color: #a0a6ad;
+}
+
+.gripper-btn.on {
+  background: #d1f5d3;
+  border-color: #4caf50;
+  color: #1f7a29;
+}
+
 .gripper-row {
   display: flex;
   justify-content: space-between;
