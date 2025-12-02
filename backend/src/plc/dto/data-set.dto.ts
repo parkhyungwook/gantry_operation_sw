@@ -72,4 +72,10 @@ export class DataSetResponseDto {
 
   @ApiProperty()
   enabled: boolean;
+
+  @ApiProperty({ required: false })
+  lastUpdatedAt?: string;
+
+  @ApiProperty({ required: false, type: [Number] })
+  values?: number[];
 }

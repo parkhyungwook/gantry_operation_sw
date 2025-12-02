@@ -8,12 +8,13 @@ import { TagController } from './tag.controller';
 import { DataSet } from './entities/data-set.entity';
 import { Tag } from './entities/tag.entity';
 import { TagCache } from './entities/tag-cache.entity';
+import { DataSetCache } from './entities/data-set-cache.entity';
 import { COMMUNICATION_SERVICE } from '../communication/communication.types';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([DataSet, Tag, TagCache]),
+    TypeOrmModule.forFeature([DataSet, Tag, TagCache, DataSetCache]),
   ],
   controllers: [TagController],
   providers: [

@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { DataSet } from "../entities/data-set.entity";
 import { Tag } from "../entities/tag.entity";
 import { TagCache } from "../entities/tag-cache.entity";
+import { DataSetCache } from "../entities/data-set-cache.entity";
 import { PlcValue } from "../plc.types";
 
 /**
@@ -18,7 +19,9 @@ export class PlcDbService {
     @InjectRepository(Tag)
     private readonly tagRepo: Repository<Tag>,
     @InjectRepository(TagCache)
-    private readonly tagCacheRepo: Repository<TagCache>
+    private readonly tagCacheRepo: Repository<TagCache>,
+    @InjectRepository(DataSetCache)
+    private readonly dataSetCacheRepo: Repository<DataSetCache>
   ) {}
 
   // ==================== DataSet CRUD ====================
@@ -76,6 +79,15 @@ export class PlcDbService {
     return this.tagCacheRepo.save(cache);
   }
 
+  async saveTagCacheBulk(
+    caches: Array<{ key: string; value: PlcValue; timestamp: Date; error?: string }>
+  ): Promise<void> {
+    if (caches.length === 0) {
+      return;
+    }
+    await this.tagCacheRepo.upsert(caches, ["key"]);
+  }
+
   async findTagCache(key: string): Promise<TagCache | null> {
     return this.tagCacheRepo.findOne({ where: { key } });
   }
@@ -86,5 +98,19 @@ export class PlcDbService {
 
   async clearAllTagCache(): Promise<void> {
     await this.tagCacheRepo.clear();
+  }
+
+  // ==================== DataSet Cache CRUD ====================
+  async findDataSetCache(): Promise<DataSetCache[]> {
+    return this.dataSetCacheRepo.find();
+  }
+
+  async upsertDataSetCache(
+    caches: Array<{ dataSetId: number; length: number; values: number[]; timestamp: Date; error?: string }>
+  ): Promise<void> {
+    if (caches.length === 0) {
+      return;
+    }
+    await this.dataSetCacheRepo.upsert(caches, ["dataSetId"]);
   }
 }

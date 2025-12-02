@@ -18,6 +18,8 @@ export class TagService implements OnModuleInit, OnModuleDestroy {
   // DataSet별 원본 데이터 캐시 (메모리)
   private dataSetCache: Map<number, number[]> = new Map();
   private isPollingActive = false;
+  private tagListCache: Map<number, Tag[]> = new Map();
+  private dataSetCacheMeta: Map<number, { timestamp: Date; error?: string }> = new Map();
 
   // 성능 메트릭
   private readCount = 0;
@@ -85,6 +87,8 @@ export class TagService implements OnModuleInit, OnModuleDestroy {
     }
     this.pollingTimers.clear();
     this.dataSetCache.clear();
+    this.dataSetCacheMeta.clear();
+    this.dataSetCacheMeta.clear();
   }
 
   isPolling(): boolean {
@@ -127,21 +131,24 @@ export class TagService implements OnModuleInit, OnModuleDestroy {
    * DataSet 전체를 한 번에 읽고, 각 Tag별로 캐시 저장
    */
   private async pollDataSet(dataSet: DataSet): Promise<void> {
+    const cachePayload: Array<{ key: string; value: PlcValue; timestamp: Date; error?: string }> = [];
+    let rawData: number[] = [];
     try {
       const deviceCode = this.getDeviceCode(dataSet.addressType);
 
       // 전체 워드를 한 번에 읽기
-      const rawData = await this.communication.readNumbers(deviceCode, dataSet.startAddress, dataSet.length);
+      rawData = await this.communication.readNumbers(deviceCode, dataSet.startAddress, dataSet.length);
 
       this.readCount++;
       this.dataSetCache.set(dataSet.id, rawData);
+      this.dataSetCacheMeta.set(dataSet.id, { timestamp: new Date(), error: undefined });
 
       // 각 Tag별로 값 추출 및 캐시 저장
-      const tags = await this.db.findTagsByDataSet(dataSet.id);
+      const tags = await this.getTagsForDataSet(dataSet);
       for (const tag of tags) {
         try {
           const value = this.extractTagValue(tag, rawData);
-          await this.db.saveTagCache({
+          cachePayload.push({
             key: tag.key,
             value,
             timestamp: new Date(),
@@ -149,7 +156,7 @@ export class TagService implements OnModuleInit, OnModuleDestroy {
           });
         } catch (error) {
           this.logger.error(`Failed to extract tag ${tag.key}`, (error as Error).stack);
-          await this.db.saveTagCache({
+          cachePayload.push({
             key: tag.key,
             value: this.getEmptyValueForType(tag.dataType),
             timestamp: new Date(),
@@ -157,20 +164,113 @@ export class TagService implements OnModuleInit, OnModuleDestroy {
           });
         }
       }
+
+      await this.db.saveTagCacheBulk(cachePayload);
+      await this.db.upsertDataSetCache([
+        {
+          dataSetId: dataSet.id,
+          length: rawData.length,
+          values: rawData,
+          timestamp: new Date(),
+          error: undefined,
+        },
+      ]);
     } catch (error) {
       this.logger.error(`Failed to poll DataSet ${dataSet.id}`, (error as Error).stack);
 
       // 에러 발생 시 모든 Tag를 에러 상태로 저장
-      const tags = await this.db.findTagsByDataSet(dataSet.id);
+      const tags = await this.getTagsForDataSet(dataSet);
       for (const tag of tags) {
-        await this.db.saveTagCache({
+        cachePayload.push({
           key: tag.key,
           value: this.getEmptyValueForType(tag.dataType),
           timestamp: new Date(),
           error: (error as Error).message,
         });
       }
+
+      await this.db.saveTagCacheBulk(cachePayload);
+      this.dataSetCacheMeta.set(dataSet.id, { timestamp: new Date(), error: (error as Error).message });
+      await this.db.upsertDataSetCache([
+        {
+          dataSetId: dataSet.id,
+          length: rawData.length || dataSet.length,
+          values: rawData,
+          timestamp: new Date(),
+          error: (error as Error).message,
+        },
+      ]);
     }
+  }
+
+  private async getTagsForDataSet(dataSet: DataSet): Promise<Tag[]> {
+    const cached = this.tagListCache.get(dataSet.id);
+    if (cached && cached.length > 0) {
+      return cached;
+    }
+    const tags = dataSet.tags && dataSet.tags.length > 0 ? dataSet.tags : await this.db.findTagsByDataSet(dataSet.id);
+    this.tagListCache.set(dataSet.id, tags);
+    return tags;
+  }
+
+  getDataSetCacheSnapshot(): Array<{
+    dataSetId: number;
+    length: number;
+    values: number[];
+    timestamp?: Date;
+    error?: string;
+  }> {
+    const out: Array<{
+      dataSetId: number;
+      length: number;
+      values: number[];
+      timestamp?: Date;
+      error?: string;
+    }> = [];
+    for (const [dataSetId, values] of this.dataSetCache.entries()) {
+      const meta = this.dataSetCacheMeta.get(dataSetId);
+      out.push({
+        dataSetId,
+        length: values.length,
+        values,
+        timestamp: meta?.timestamp,
+        error: meta?.error,
+      });
+    }
+    return out;
+  }
+
+  async writeDataSetValues(dataSetId: number, values: number[]): Promise<void> {
+    const dataSet = await this.db.findDataSet(dataSetId);
+    if (!dataSet) {
+      throw new NotFoundException(`DataSet ${dataSetId} not found`);
+    }
+    if (!Array.isArray(values)) {
+      throw new BadRequestException("values must be an array");
+    }
+    if (values.length === 0) {
+      throw new BadRequestException("values array is empty");
+    }
+    if (values.length > dataSet.length) {
+      throw new BadRequestException(`values length ${values.length} exceeds data set length ${dataSet.length}`);
+    }
+
+    const deviceCode = this.getDeviceCode(dataSet.addressType);
+    await this.communication.writeNumbers(deviceCode, dataSet.startAddress, values);
+
+    // 메모리/DB 캐시 업데이트
+    this.dataSetCache.set(dataSetId, values);
+    const now = new Date();
+    this.dataSetCacheMeta.set(dataSetId, { timestamp: now, error: undefined });
+    await this.db.upsertDataSetCache([
+      {
+        dataSetId,
+        length: values.length,
+        values,
+        timestamp: now,
+        error: undefined,
+      },
+    ]);
   }
 
   /**

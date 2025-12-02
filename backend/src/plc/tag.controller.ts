@@ -4,6 +4,7 @@ import { PlcDbService } from "./services/plc-db.service";
 import { TagService } from "./services/tag.service";
 import { CreateDataSetDto, UpdateDataSetDto, DataSetResponseDto } from "./dto/data-set.dto";
 import { CreateTagDto, UpdateTagDto, TagResponseDto, TagValueResponseDto, WriteTagValueDto } from "./dto/tag.dto";
+import { DataSetValuesResponseDto, WriteDataSetValuesDto } from "./dto/data-set-value.dto";
 import { DataSet } from "./entities/data-set.entity";
 import { Tag } from "./entities/tag.entity";
 
@@ -25,6 +26,35 @@ export class TagController {
   async getAllDataSets(): Promise<DataSetResponseDto[]> {
     const dataSets = await this.db.findAllDataSets();
     return dataSets.map((ds) => this.toDataSetDto(ds));
+  }
+
+  // ==================== DataSet Values (bulk) ====================
+
+  @Get("data-sets/values")
+  @ApiTags("data-sets")
+  @ApiOperation({ summary: "DataSet별 값 조회 (캐시)" })
+  @ApiResponse({ status: 200, type: [DataSetValuesResponseDto] })
+  async getDataSetValues(): Promise<DataSetValuesResponseDto[]> {
+    // 우선 메모리 캐시 조회, 없으면 DB 캐시 조회
+    const snapshots = this.tagService.getDataSetCacheSnapshot();
+    if (snapshots.length > 0) {
+      return snapshots.map((s) => ({
+        dataSetId: s.dataSetId,
+        length: s.length,
+        values: s.values,
+        timestamp: s.timestamp,
+        error: s.error,
+      }));
+    }
+
+    const persisted = await this.db.findDataSetCache();
+    return persisted.map((c) => ({
+      dataSetId: c.dataSetId,
+      length: c.length,
+      values: c.values,
+      timestamp: c.timestamp,
+      error: c.error,
+    }));
   }
 
   @Get("data-sets/:id")
@@ -86,6 +116,17 @@ export class TagController {
   async deleteDataSet(@Param("id", ParseIntPipe) id: number): Promise<void> {
     await this.db.deleteDataSet(id);
     this.logger.log(`Deleted DataSet: ${id}`);
+  }
+
+  @Post("data-sets/values")
+  @ApiTags("data-sets")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "DataSet 값 일괄 쓰기" })
+  @ApiBody({ type: WriteDataSetValuesDto })
+  @ApiResponse({ status: 200 })
+  async writeDataSetValues(@Body() dto: WriteDataSetValuesDto): Promise<{ message: string }> {
+    await this.tagService.writeDataSetValues(dto.dataSetId, dto.values);
+    return { message: `Values written to DataSet ${dto.dataSetId}` };
   }
 
   // ==================== Tag API ====================
@@ -219,6 +260,28 @@ export class TagController {
   stopTagPolling(): { message: string } {
     this.tagService.stopPolling();
     return { message: "Tag polling stopped" };
+  }
+
+  // ==================== DataSet Polling Control (동일 로직 라우팅) ====================
+
+  @Post("data-sets/polling/start")
+  @ApiTags("data-sets")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "DataSet 폴링 시작" })
+  @ApiResponse({ status: 200 })
+  async startDataSetPolling(): Promise<{ message: string }> {
+    await this.tagService.startPolling();
+    return { message: "DataSet polling started" };
+  }
+
+  @Post("data-sets/polling/stop")
+  @ApiTags("data-sets")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "DataSet 폴링 중지" })
+  @ApiResponse({ status: 200 })
+  stopDataSetPolling(): { message: string } {
+    this.tagService.stopPolling();
+    return { message: "DataSet polling stopped" };
   }
 
   @Get("tags/polling/status")
